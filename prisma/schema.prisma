@@ -1,0 +1,164 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model Account {
+  id                Int     @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            Int        @id @default(autoincrement())
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @default(now())
+  name          String?
+  password      String?
+  email         String?    @unique
+  isAdmin       Boolean?
+  emailVerified DateTime?
+  image         String?
+  roles         String[]
+  todos         Todos[]
+  tickets       Ticket[]
+  file          UserFile[]
+  notes         Notes[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Youtubesettings {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+  clientid     String
+  clientsecret String
+  privacy      String
+}
+
+model Ticket {
+  id         Int          @id @default(autoincrement())
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @default(now())
+  name       String
+  title      String
+  detail     String?
+  email      String
+  note       String?
+  isComplete Boolean
+  priority   String
+  assignedTo User?        @relation(fields: [userId], references: [id])
+  client     Client       @relation(fields: [clientId], references: [id])
+  clientId   Int
+  userId     Int
+  TicketFile TicketFile[]
+
+  lastUpdateBy  String?
+}
+
+model Client {
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  name        String
+  email       String   @unique
+  contactName String
+  number      String?
+  notes       String?
+  tickets     Ticket[]
+}
+
+model UserFile {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  filename  String
+  path      String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model TicketFile {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  filename   String
+  path       String
+  youtubeUrl String?
+  thumbnail  String?
+  ticketId   Int
+  ticket     Ticket   @relation(fields: [ticketId], references: [id])
+}
+
+model Notes {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  title     String
+  note      String
+  createdBy User     @relation(fields: [userId], references: [id])
+  userId    Int
+}
+
+model Todos {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  text      String
+  done      Boolean  @default(false)
+  createdBy User     @relation(fields: [userId], references: [id])
+  userId    Int
+}
+
+model Webhooks {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  name      String
+  url       String
+  type      Hook
+  active    Boolean
+  secret    String?
+  createdBy String
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum Hook {
+  ticket_created
+  ticket_status_changed
+}
