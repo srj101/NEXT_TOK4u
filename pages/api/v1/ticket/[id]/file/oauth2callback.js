@@ -41,10 +41,10 @@ export default async function oauth2callback(req, res) {
       type: "oauth",
       client_id: data.clientid,
       client_secret: data.clientsecret,
-      redirect_url: `${process.env.BASE_URL}/api/v1/ticket/1/file/oauth2callback`,
+      redirect_url: "http://localhost:3000/api/v1/ticket/1/file/oauth2callback",
     });
 
-    await oAuth.getToken(req.query.code, (err, tokens) => {
+    await oAuth.getToken(req.query.code, async (err, tokens) => {
       if (err) {
         console.log(err);
         return;
@@ -52,7 +52,7 @@ export default async function oauth2callback(req, res) {
 
       oAuth.setCredentials(tokens);
 
-      youtube.videos.insert(
+      await youtube.videos.insert(
         {
           resource: {
             snippet: { title, description },
@@ -66,20 +66,16 @@ export default async function oauth2callback(req, res) {
           },
         },
         async (err, data) => {
-          if (err) {
-            console.log(err);
-          }
-          console.log("data------------>", data.data.snippet.thumbnails);
           let videoUrl = `https://www.youtube.com/watch?v=${data.data.id}`;
-          await prisma.ticketFile.updateMany({
+          const result = await prisma.ticketFile.updateMany({
             where: { path: `./storage/tickets/${ticketid}/${filename}` },
             data: {
               youtubeUrl: videoUrl,
               thumbnail: data.data.snippet.thumbnails.high.url,
             },
           });
-          res.status(200).json("Video uploaded successfullly");
-          return;
+          return res.status(200).json("Video uploaded successfully");
+          // process.exit();
         }
       );
     });

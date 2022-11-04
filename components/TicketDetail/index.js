@@ -1,18 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { message, Upload, Divider } from "antd";
 import moment from "moment";
 import { useRouter } from "next/router";
 
 import rehypeSanitize from "rehype-sanitize";
-import MDEditor from "@uiw/react-md-editor";
+// import MDEditor from "@uiw/react-md-editor";
+import { Editor } from "@tinymce/tinymce-react";
 
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 import TicketFiles from "../TicketFiles";
 import ClientNotesModal from "../ClientNotesModal";
 import TransferTicket from "../TransferTicket";
+import Link from "next/link";
 
 export default function TicketDetail(props) {
+  const editorRef = useRef(null);
+
+  const [isAdmin, setIsAdmin] = useState(props.user.isAdmin);
   const [ticket, setTicket] = useState(props.ticket);
   const [edit, setEdit] = useState(false);
 
@@ -22,13 +27,14 @@ export default function TicketDetail(props) {
   const [name, setName] = useState(props.ticket.name);
   const [email, setEmail] = useState(props.ticket.email);
   const [number, setNumber] = useState(props.ticket.number);
+  const [lastUpdateBy, setLastUpdateBy] = useState(props.ticket.lastUpdateBy);
   const [badge, setBadge] = useState("");
   const [uploaded, setUploaded] = useState();
 
   const history = useRouter();
 
   const { id } = history.query;
-console.log(id);
+  console.log(id);
   let file = [];
 
   useEffect(() => {
@@ -53,6 +59,7 @@ console.log(id);
         detail: issue,
         note,
         title,
+        lastUpdateBy: props.author,
       }),
     }).then((res) => res.json());
   }
@@ -66,18 +73,25 @@ console.log(id);
       body: JSON.stringify({
         status: !props.ticket.isComplete,
       }),
-    }).then((res) => res.json());
+    })
+      .then(async (res) => {
+        await history.push(`/ticket/${id}`);
+        message.info("Ticket status updated");
+        return res.json();
+      })
+      .catch((err) => message.error(err));
   }
 
   const propsUpload = {
     name: "file",
     showUploadList: false,
     action: `/api/v1/ticket/${id}/file/upload`,
-    data: () => {
+    data: (file) => {
       let data = new FormData();
       data.append("file", file);
       data.append("filename", file.name);
       data.append("ticket", ticket.id);
+      return data;
     },
     onChange(info) {
       if (info.file.status !== "uploading") {
@@ -136,6 +150,19 @@ console.log(id);
                         opened by user: {ticket.name} from client:{" "}
                         {ticket.client.name}
                       </p>
+                    </div>
+                    <div className="text-right">
+                      <h1
+                        className={
+                          edit ? "hidden" : "text-2xl font-bold text-gray-900"
+                        }
+                      >
+                        Note
+                      </h1>
+                      <p
+                        className={edit ? "hidden" : "font-bold mt-2 text-sm"}
+                        dangerouslySetInnerHTML={{ __html: note }}
+                      ></p>
                     </div>
                   </div>
 
@@ -215,10 +242,7 @@ console.log(id);
                     <div className="mt-4 flex space-x-3 md:mt-0">
                       {ticket.isComplete === false ? (
                         <button
-                          onClick={async () => {
-                            await updateStatus();
-                            history.push("/ticket");
-                          }}
+                          onClick={updateStatus}
                           type="button"
                           className="inline-flex justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
                         >
@@ -276,9 +300,46 @@ console.log(id);
                     <h1 className="text-xl">Issue</h1>
                     <div className={edit ? "hidden" : "prose max-w-none"}>
                       {issue ? (
-                        <MDEditor.Markdown
-                          source={issue}
-                          rehypePlugins={[[rehypeSanitize]]}
+                        <Editor
+                          apiKey={
+                            process.env.TINY_MCE_API_KEY ||
+                            "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                          }
+                          onInit={(evt, editor) => (editorRef.current = editor)}
+                          value={issue}
+                          init={{
+                            height: 500,
+                            menubar: false,
+                            selector: "textarea",
+                            plugins: [
+                              "advlist",
+                              "autolink",
+                              "lists",
+                              "link",
+                              "image",
+                              "charmap",
+                              "preview",
+                              "anchor",
+                              "searchreplace",
+                              "visualblocks",
+                              "code",
+                              "fullscreen",
+                              "insertdatetime",
+                              "media",
+                              "table",
+                              "code",
+                              "help",
+                              "wordcount",
+                              "textpattern",
+                            ],
+                            toolbar:
+                              "undo redo | blocks | " +
+                              "bold italic forecolor | alignleft aligncenter " +
+                              "alignright alignjustify | bullist numlist outdent indent | " +
+                              "removeformat | help",
+                            content_style:
+                              "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+                          }}
                         />
                       ) : (
                         <span>
@@ -289,23 +350,92 @@ console.log(id);
                     </div>
                     <div className={edit ? "prose max-w-none" : "hidden"}>
                       <div className="hidden sm:block">
-                        <MDEditor
+                        <Editor
+                          apiKey={
+                            process.env.TINY_MCE_API_KEY ||
+                            "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                          }
+                          onInit={(evt, editor) => (editorRef.current = editor)}
                           value={issue || ""}
-                          onChange={setIssue}
-                          previewOptions={{
-                            rehypePlugins: [[rehypeSanitize]],
+                          onEditorChange={setIssue}
+                          init={{
+                            height: 500,
+                            menubar: false,
+                            selector: "textarea",
+                            plugins: [
+                              "advlist",
+                              "autolink",
+                              "lists",
+                              "link",
+                              "image",
+                              "charmap",
+                              "preview",
+                              "anchor",
+                              "searchreplace",
+                              "visualblocks",
+                              "code",
+                              "fullscreen",
+                              "insertdatetime",
+                              "media",
+                              "table",
+                              "code",
+                              "help",
+                              "wordcount",
+                              "textpattern",
+                            ],
+                            toolbar:
+                              "undo redo | blocks | " +
+                              "bold italic forecolor | alignleft aligncenter " +
+                              "alignright alignjustify | bullist numlist outdent indent | " +
+                              "removeformat | help",
+                            content_style:
+                              "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
                           }}
                         />
                       </div>
                       <div className="sm:hidden">
-                        <MDEditor
+                        <Editor
+                          apiKey={
+                            process.env.TINY_MCE_API_KEY ||
+                            "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                          }
+                          onInit={(evt, editor) => (editorRef.current = editor)}
                           value={issue || ""}
-                          onChange={setIssue}
-                          previewOptions={{
-                            rehypePlugins: [[rehypeSanitize]],
+                          onEditorChange={setIssue}
+                          init={{
+                            height: 500,
+                            menubar: false,
+                            selector: "textarea",
+
+                            plugins: [
+                              "advlist",
+                              "autolink",
+                              "lists",
+                              "link",
+                              "image",
+                              "charmap",
+                              "preview",
+                              "anchor",
+                              "searchreplace",
+                              "visualblocks",
+                              "code",
+                              "fullscreen",
+                              "insertdatetime",
+                              "media",
+                              "table",
+                              "code",
+                              "help",
+                              "wordcount",
+                              "textpattern",
+                            ],
+                            toolbar:
+                              "undo redo | blocks | " +
+                              "bold italic forecolor | alignleft aligncenter " +
+                              "alignright alignjustify | bullist numlist outdent indent | " +
+                              "removeformat | help",
+                            content_style:
+                              "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
                           }}
-                          preview="edit"
-                          hideToolbar={true}
                         />
                       </div>
                     </div>
@@ -327,9 +457,51 @@ console.log(id);
                 </div>
                 <div className={edit ? "hidden" : "mt-3"}>
                   {note ? (
-                    <MDEditor.Markdown
-                      source={note}
-                      rehypePlugins={[[rehypeSanitize]]}
+                    <Editor
+                      apiKey={
+                        process.env.TINY_MCE_API_KEY ||
+                        "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                      }
+                      onInit={(evt, editor) => (editorRef.current = editor)}
+                      value={note}
+                      disabled={
+                        isAdmin == true ? false : lastUpdateBy ? true : false
+                      }
+                      onEditorChange={setNote}
+                      init={{
+                        height: 500,
+                        menubar: true,
+                        selector: "textarea",
+                        plugins: [
+                          "advlist",
+                          "autolink",
+                          "lists",
+                          "link",
+                          "image",
+                          "charmap",
+                          "preview",
+                          "anchor",
+                          "searchreplace",
+                          "visualblocks",
+                          "code",
+                          "fullscreen",
+                          "insertdatetime",
+                          "media",
+                          "table",
+                          "code",
+                          "help",
+                          "wordcount",
+                          "textpattern",
+                        ],
+                        toolbar:
+                          "undo redo | blocks | " +
+                          "bold italic forecolor | alignleft aligncenter " +
+                          "alignright alignjustify | bullist numlist outdent indent | " +
+                          "removeformat | help" +
+                          "preview",
+                        content_style:
+                          "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+                      }}
                     />
                   ) : (
                     <span>No work has been entered yet</span>
@@ -337,23 +509,105 @@ console.log(id);
                 </div>
                 <div className={edit ? "mt-3" : "hidden"}>
                   <div className="hidden sm:block">
-                    <MDEditor
+                    <Editor
+                      apiKey={
+                        process.env.TINY_MCE_API_KEY ||
+                        "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                      }
+                      onInit={(evt, editor) => (editorRef.current = editor)}
                       value={note || ""}
-                      onChange={setNote}
-                      previewOptions={{
-                        rehypePlugins: [[rehypeSanitize]],
+                      disabled={
+                        isAdmin == true ? false : lastUpdateBy ? true : false
+                      }
+                      onEditorChange={setNote}
+                      init={{
+                        theme_advanced_buttons3_add: "preview",
+                        plugin_preview_width: "500",
+                        plugin_preview_height: "600",
+                        height: 500,
+                        menubar: true,
+                        selector: "textarea",
+                        plugins: [
+                          "advlist",
+                          "autolink",
+                          "lists",
+                          "link",
+                          "image",
+                          "charmap",
+                          "preview",
+                          "anchor",
+                          "searchreplace",
+                          "visualblocks",
+                          "code",
+                          "fullscreen",
+                          "insertdatetime",
+                          "media",
+                          "table",
+                          "code",
+                          "help",
+                          "wordcount",
+                          "textpattern",
+                        ],
+                        toolbar:
+                          "undo redo | blocks | " +
+                          "bold italic forecolor | alignleft aligncenter " +
+                          "alignright alignjustify | bullist numlist outdent indent | " +
+                          "removeformat | help" +
+                          "preview",
+                        content_style:
+                          "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
                       }}
                     />
                   </div>
                   <div className="sm:hidden">
-                    <MDEditor
+                    <Editor
+                      apiKey={
+                        process.env.TINY_MCE_API_KEY ||
+                        "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                      }
+                      onInit={(evt, editor) => (editorRef.current = editor)}
                       value={note || ""}
-                      onChange={setNote}
-                      previewOptions={{
-                        rehypePlugins: [[rehypeSanitize]],
+                      disabled={
+                        isAdmin == true ? false : lastUpdateBy ? true : false
+                      }
+                      onEditorChange={setNote}
+                      init={{
+                        theme_advanced_buttons3_add: "preview",
+                        plugin_preview_width: "500",
+                        plugin_preview_height: "600",
+                        height: 500,
+                        menubar: true,
+                        selector: "textarea",
+                        plugins: [
+                          "advlist",
+                          "autolink",
+                          "lists",
+                          "link",
+                          "image",
+                          "charmap",
+                          "preview",
+                          "anchor",
+                          "searchreplace",
+                          "visualblocks",
+                          "code",
+                          "fullscreen",
+                          "insertdatetime",
+                          "media",
+                          "table",
+                          "code",
+                          "help",
+                          "wordcount",
+                          "textpattern",
+                        ],
+                        toolbar:
+                          "undo redo | blocks | " +
+                          "bold italic forecolor | alignleft aligncenter " +
+                          "alignright alignjustify | bullist numlist outdent indent | " +
+                          "removeformat | help" +
+                          "preview",
+                        content_style:
+                          "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
                       }}
-                      preview="edit"
-                      hideToolbar={true}
                     />
                   </div>
                 </div>
@@ -441,7 +695,10 @@ console.log(id);
                   </svg>
                   <span className="text-gray-900 text-sm font-medium">
                     Last updated{" "}
-                    <span>{moment(ticket.updatedAt).format("DD/MM/YYYY")}</span>
+                    <span>
+                      {moment(ticket.updatedAt).format("DD/MM/YYYY")}{" "}
+                      {ticket.lastUpdateBy && `by ${ticket.lastUpdateBy}`}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -477,17 +734,19 @@ console.log(id);
                 </div>
               </div>
               <div className="mt-10">
-                <div>
-                  <Divider className="bg-gray-200" />
-                  <h2 className="text-sm font-medium text-gray-500">
-                    Contact Details
-                  </h2>
-                  <div className="flex flex-col">
-                    <span>Name - {ticket.name}</span>
-                    <span>Email - {ticket.email} </span>
-                    <span>Number - {ticket.client.number} </span>
+                <Link href="/settings/">
+                  <div className="cursor-pointer">
+                    <Divider className="bg-gray-200" />
+                    <h2 className="text-sm font-medium text-gray-500">
+                      Contact Details
+                    </h2>
+                    <div className="flex flex-col">
+                      <span>Name - {ticket.name}</span>
+                      <span>Email - {ticket.email} </span>
+                      <span>Number - {ticket.client.number} </span>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </div>
             </aside>
 
@@ -558,7 +817,7 @@ console.log(id);
                     />
                   </svg>
                   <span className="text-gray-900 text-sm font-medium">
-                    Last updated{" "}
+                    Last updated {lastUpdateBy ? `by ${lastUpdateBy}` : ""} at
                     <span>{moment(ticket.updatedAt).format("DD/MM/YYYY")}</span>
                   </span>
                 </div>

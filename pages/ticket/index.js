@@ -8,22 +8,11 @@ import {
 } from "react-table";
 import Link from "next/link";
 import Loader from "react-spinners/ClipLoader";
-/* import MarkdownPreview from "../../components/MarkdownPreview";
-import TicketsMobileList from "../../components/TicketsMobileList";  */
- import dynamic from "next/dynamic";
 
-const MarkdownPreview = dynamic(
-  () => import("../../components/MarkdownPreview"),
-  { ssr: false }
-);
-
-const TicketsMobileList = dynamic(
-  () => import("../../components/TicketsMobileList"),
-  { ssr: false }
-); 
+import TicketsMobileList from "../../components/TicketsMobileList";
 
 async function getUserTickets() {
-  const res = await fetch("/api/v1/ticket/user/open");
+  const res = await fetch("/api/v1/ticket/all");
   return res.json();
 }
 
@@ -40,20 +29,21 @@ function DefaultColumnFilter({ column: { filterValue, setFilter } }) {
     />
   );
 }
+
 function Table({ columns, data }) {
   const filterTypes = React.useMemo(
     () => ({
-      // Add a new fuzzyTextFilterFn filter type.
+      // // Add a new fuzzyTextFilterFn filter type.
       // fuzzyText: fuzzyTextFilterFn,
-      // Or, override the default text filter to use
-      // "startWith"
+      // // Or, override the default text filter to use
+      // // "startWith"
       text: (rows, id, filterValue) =>
         rows.filter((row) => {
           const rowValue = row.values[id];
           return rowValue !== undefined
-            ? Number(rowValue)
+            ? String(rowValue)
                 .toLowerCase()
-                .startsWith(Number(filterValue).toLowerCase())
+                .startsWith(String(filterValue).toLowerCase())
             : true;
         }),
     }),
@@ -118,6 +108,7 @@ function Table({ columns, data }) {
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
                         {column.render("Header")}
+                        {/* Render the columns filter UI */}
                         <div>
                           {column.canFilter ? column.render("Filter") : null}
                         </div>
@@ -200,7 +191,7 @@ function Table({ columns, data }) {
   );
 }
 
-export default function Tickets() {
+export default function TicketHitory() {
   const { data, status, error } = useQuery("userTickets", getUserTickets);
 
   const high = "bg-red-100 text-red-800";
@@ -223,6 +214,38 @@ export default function Tickets() {
       Header: "Client",
       accessor: "client.name",
       id: "client_name",
+    },
+    {
+      Header: "Engineer",
+      accessor: "assignedTo.name",
+      id: "engineer",
+    },
+    {
+      Header: "Status",
+      accessor: (data) => (data.isComplete ? "Completed" : "Outstanding"),
+      id: "status",
+
+      Cell: ({ value }) => {
+        let p = value;
+        let badge;
+
+        if (p === "Outstanding") {
+          badge = high;
+        }
+        if (p === "Completed") {
+          badge = low;
+        }
+
+        return (
+          <>
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${badge}`}
+            >
+              {value}
+            </span>
+          </>
+        );
+      },
     },
     {
       Header: "Priority",
@@ -256,13 +279,9 @@ export default function Tickets() {
     {
       Header: "Title",
       accessor: "title",
-      id: "Title",
+      id: "title",
       Cell: ({ value }) => {
-        return (
-          <div className="truncate">
-            <MarkdownPreview data={value} />
-          </div>
-        );
+        return <div className="truncate">{value}</div>;
       },
     },
     {
@@ -287,15 +306,14 @@ export default function Tickets() {
       )}
 
       {status === "success" && (
-        <>
+        <div>
           <div className="hidden sm:block">
             <Table columns={columns} data={data.tickets} />
           </div>
-
           <div className="sm:hidden">
             <TicketsMobileList tickets={data.tickets} />
           </div>
-        </>
+        </div>
       )}
     </div>
   );

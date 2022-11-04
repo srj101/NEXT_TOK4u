@@ -1,19 +1,23 @@
-import dynamic from "next/dynamic";
-import { useState } from "react";
+// import dynamic from "next/dynamic";
+import { useRef, useState } from "react";
 import { useRouter } from "next/router";
 
-import rehypeSanitize from "rehype-sanitize";
+// import rehypeSanitize from "rehype-sanitize";
 
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 
-const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
+// const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
+
+import { Editor } from "@tinymce/tinymce-react";
 
 export default function ViewNoteBook() {
+  const editorRef = useRef(null);
+
   const [value, setValue] = useState("Test");
   const [title, setTitle] = useState("Markdown Test");
 
-  const router = useRouter()
+  const router = useRouter();
 
   async function postMarkdown() {
     await fetch("/api/v1/note/create-note", {
@@ -23,12 +27,13 @@ export default function ViewNoteBook() {
       },
       body: JSON.stringify({
         value,
-        title
+        title,
       }),
-    }).then((res) => res.json())
-    .then((res) => {
-      router.push(`/notebook/${res.id}`)
     })
+      .then((res) => res.json())
+      .then((res) => {
+        router.push(`/notebook/${res.id}`);
+      });
   }
 
   return (
@@ -54,13 +59,51 @@ export default function ViewNoteBook() {
       </div>
 
       <div className="mt-4 h-full">
-        <MDEditor
-          value={value}
-          onChange={setValue}
-          previewOptions={{
-            rehypePlugins: [[rehypeSanitize]],
+        <Editor
+          apiKey={
+            process.env.TINY_MCE_API_KEY ||
+            "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+          }
+          onInit={(evt, editor) => (editorRef.current = editor)}
+          value={value || ""}
+          onEditorChange={setValue}
+          init={{
+            theme_advanced_buttons3_add: "preview",
+            plugin_preview_width: "500",
+            plugin_preview_height: "600",
+            height: 500,
+            menubar: true,
+            selector: "textarea",
+            plugins: [
+              "advlist",
+              "autolink",
+              "lists",
+              "link",
+              "image",
+              "charmap",
+              "preview",
+              "anchor",
+              "searchreplace",
+              "visualblocks",
+              "code",
+              "fullscreen",
+              "insertdatetime",
+              "media",
+              "table",
+              "code",
+              "help",
+              "wordcount",
+              "textpattern",
+            ],
+            toolbar:
+              "undo redo | blocks | " +
+              "bold italic forecolor | alignleft aligncenter " +
+              "alignright alignjustify | bullist numlist outdent indent | " +
+              "removeformat | help" +
+              "preview",
+            content_style:
+              "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
           }}
-          height="80vh"
         />
 
         <div className="mt-4 float-right">

@@ -1,18 +1,21 @@
 const { prisma } = require("../../../../../prisma/prisma");
+
 import { Novu } from "@novu/node";
 
 const novu = new Novu(process.env.NOVU_TOKEN);
+
 export default async function updateTicket(req, res) {
   const { id } = req.query;
 
-  const { note, detail } = req.body;
+  const { note, detail, lastUpdateBy } = req.body;
 
   try {
-    await prisma.ticket.update({
+    const data = await prisma.ticket.update({
       where: { id: Number(id) },
       data: {
         detail,
         note,
+        lastUpdateBy,
       },
     });
 
@@ -26,6 +29,7 @@ export default async function updateTicket(req, res) {
         answer: data.note,
         title: data.title,
         detail: data.detail,
+        answeredBy: data.lastUpdateBy,
       },
     });
 

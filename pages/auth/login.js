@@ -4,6 +4,7 @@ import { signIn, getCsrfToken, getProviders } from "next-auth/react";
 import styles from "../../styles/Signin.module.css";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { message } from "antd";
 
 export async function getServerSideProps(context) {
   const providers = await getProviders();
@@ -22,6 +23,7 @@ export default function Login({ csrfToken, providers }) {
   const [mail, setMail] = useState("");
   const [password, setPassword] = useState("");
   const [checked, setChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (localStorage.checked && localStorage.email !== "") {
@@ -167,6 +169,7 @@ export default function Login({ csrfToken, providers }) {
                     value={mail}
                     placeholder="Email"
                     size="large"
+                    disabled={loading}
                     onChange={(e) => setMail(e.target.value)}
                   />
                   <hr />
@@ -175,17 +178,27 @@ export default function Login({ csrfToken, providers }) {
                     Object.values(providers).map((provider) => (
                       <div key={provider.name} style={{ marginBottom: 0 }}>
                         <button
-                          onClick={() =>
-                            signIn(provider.id, {
-                              redirect: false,
-                              callbackUrl: `${
-                                router.query.callbackUrl
-                                  ? router.query.callbackUrl
-                                  : window.location.origin
-                              }`,
-                              email: mail,
-                            })
-                          }
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            setLoading(true);
+                            try {
+                              await signIn(provider.id, {
+                                redirect: false,
+                                callbackUrl: `${
+                                  router.query.callbackUrl
+                                    ? router.query.callbackUrl
+                                    : window.location.origin
+                                }`,
+                                email: mail,
+                              });
+                              message.success(
+                                "Check your email for a login link!"
+                              );
+                            } catch (error) {
+                              message.error(error.message);
+                            }
+                            setLoading(false);
+                          }}
                         >
                           Sign in with {provider.name}
                         </button>

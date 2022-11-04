@@ -7,11 +7,12 @@ import {
   MenuIcon,
   TicketIcon,
   XIcon,
+  ChatIcon,
 } from "@heroicons/react/outline";
 import { useRouter } from "next/router";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-import Header from "../../components/header";
+import Header from "../header";
 
 import CreateTicketModal from "../CreateTicketModal";
 
@@ -58,6 +59,12 @@ export default function SideLayout({ children }) {
       href: "/notebook",
       icon: FolderIcon,
       current: location.pathname === "/notebook" ? true : false,
+    },
+    {
+      name: "Chat",
+      href: "/chat",
+      icon: ChatIcon,
+      current: location.pathname === "/chat" ? true : false,
     },
   ];
 

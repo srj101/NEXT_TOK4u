@@ -2,7 +2,8 @@ const { prisma } = require("../../../../../../prisma/prisma");
 import fs from "fs";
 
 export default async function deleteFile(req, res) {
-  const { path, id } = req.body;
+  let { path, id } = req.body;
+  path = `'/'+${path.split("./")[1]}`;
 
   try {
     await prisma.ticketFile

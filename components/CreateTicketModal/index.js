@@ -2,9 +2,17 @@ import React, { useState, useEffect, Fragment, useRef } from "react";
 import { Dialog, Transition, Listbox } from "@headlessui/react";
 import { CheckIcon, SelectorIcon } from "@heroicons/react/solid";
 import dynamic from "next/dynamic";
-import { UploadOutlined } from '@ant-design/icons';
-import { Select, Form, Input, Radio, Space , Button, message, Upload} from "antd";
-
+import { UploadOutlined } from "@ant-design/icons";
+import {
+  Select,
+  Form,
+  Input,
+  Radio,
+  Space,
+  Button,
+  message,
+  Upload,
+} from "antd";
 
 // import MDEditor from '@uiw/react-md-editor';
 import rehypeSanitize from "rehype-sanitize";
@@ -38,54 +46,49 @@ export default function CreateTicketModal() {
 
   const cancelButtonRef = useRef(null);
 
-// upload files from ticket modal- rakibul
-const handleUpload = (id) => {
-
-  const formData = new FormData();
-  console.log(fileList[0]);
-  // fileList.forEach((file) => {
-    formData.append('file', fileList[0]);
+  // upload files from ticket modal- rakibul
+  const handleUpload = (id) => {
+    const formData = new FormData();
+    console.log(fileList[0]);
+    // fileList.forEach((file) => {
+    formData.append("file", fileList[0]);
     formData.append("ticket", id);
     formData.append("title", title);
-        formData.append("company", company);
-        formData.append("details", issue);
-  // });
-  setUploading(true); // You can use any AJAX library you like
-  // /api/v1/ticket/3/file/upload
-  fetch(`/api/v1/ticket/${id}/file/upload`, {
-    method: 'POST',
-    body: formData,
-  })
-    .then((res) => res.json())
-    .then(() => {
-      setFileList([]);
-      // message.success('upload successfully.');
+    formData.append("company", company);
+    formData.append("details", issue);
+    // });
+    setUploading(true); // You can use any AJAX library you like
+    // /api/v1/ticket/3/file/upload
+    fetch(`/api/v1/ticket/${id}/file/upload`, {
+      method: "POST",
+      body: formData,
     })
-    .catch(() => {
-      message.error('file upload  failed.');
-    })
-    .finally(() => {
-      setUploading(false);
-    });
-};
+      .then((res) => res.json())
+      .then(() => {
+        setFileList([]);
+        message.success("upload successfully.");
+      })
+      .catch(() => {
+        message.error("file upload  failed.");
+      })
+      .finally(() => {
+        setUploading(false);
+      });
+  };
 
-const props = {
-  onRemove: (file) => {
-    const index = fileList.indexOf(file);
-    const newFileList = fileList.slice();
-    newFileList.splice(index, 1);
-    setFileList(newFileList);
-  },
-  beforeUpload: (file) => {
-    setFileList([...fileList, file]);
-    return false;
-  },
-  fileList,
-};
-
-
-
-
+  const props = {
+    onRemove: (file) => {
+      const index = fileList.indexOf(file);
+      const newFileList = fileList.slice();
+      newFileList.splice(index, 1);
+      setFileList(newFileList);
+    },
+    beforeUpload: (file) => {
+      setFileList([...fileList, file]);
+      return false;
+    },
+    fileList,
+  };
 
   const fetchClients = async () => {
     await fetch(`/api/v1/clients/all`, {
@@ -135,47 +138,48 @@ const props = {
         email,
         detail: issue,
         priority,
-      })
-    }).then((res) => res.json())
-    .then((data) => {
-      handleUpload(data.id)
-      // const formData = new FormData();
-      // // console.log(fileList[0]);
-      // // fileList.forEach((file) => {
-      //   formData.append('file', fileList[0]);
-      //   formData.append("ticket", data.id);
-      //   formData.append("title", title);
-      //   formData.append("company", company);
-      //   formData.append("details", issue);
-      // // });
-      // setUploading(true); // You can use any AJAX library you like
-    
-      // fetch(`/api/v1/ticket/${data.id}/file/upload`, {
-      //   method: 'POST',
-      //   body: formData,
-      // })
-      //   .then((res) => res.json())
-      //   .then(() => {
-      //     setFileList([]);
-      //     // message.success('upload successfully.');
-      //   })
-      //   .catch(() => {
-      //     message.error('file upload upload failed.');
-      //   })
-      //   .finally(() => {
-      //     setUploading(false);
-      //   });
-      
-    });
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        handleUpload(data.id);
+        // const formData = new FormData();
+        // // console.log(fileList[0]);
+        // // fileList.forEach((file) => {
+        //   formData.append('file', fileList[0]);
+        //   formData.append("ticket", data.id);
+        //   formData.append("title", title);
+        //   formData.append("company", company);
+        //   formData.append("details", issue);
+        // // });
+        // setUploading(true); // You can use any AJAX library you like
+
+        // fetch(`/api/v1/ticket/${data.id}/file/upload`, {
+        //   method: 'POST',
+        //   body: formData,
+        // })
+        //   .then((res) => res.json())
+        //   .then(() => {
+        //     setFileList([]);
+        //     // message.success('upload successfully.');
+        //   })
+        //   .catch(() => {
+        //     message.error('file upload upload failed.');
+        //   })
+        //   .finally(() => {
+        //     setUploading(false);
+        //   });
+      });
     // console.log(res);
   }
-  const isEnabled = true
-    // name.length > 0 &&
-    // title.length > 0 &&
-    // email.length > 0 &&
-    // issue.length > 0 &&
-    // typeof company !== "undefined" &&
-    // typeof engineer !== "undefined";
+  const isEnabled = true;
+  // name.length > 0 &&
+  // title.length > 0 &&
+  // email.length > 0 &&
+  // issue.length > 0 &&
+  // typeof company !== "undefined" &&
+  // typeof engineer !== "undefined";
 
   useEffect(() => {
     fetchClients();
@@ -437,10 +441,10 @@ const props = {
                         )}
                       </Listbox>
                       <div>
-                      {/* <UploadMultiFiles /> */}
-                      <Upload {...props}>
-        <Button icon={<UploadOutlined />}>Select File</Button>
-      </Upload>
+                        {/* <UploadMultiFiles /> */}
+                        <Upload {...props}>
+                          <Button icon={<UploadOutlined />}>Select File</Button>
+                        </Upload>
                       </div>
                       <MDEditor
                         onChange={setIssue}
@@ -471,7 +475,6 @@ const props = {
                       <button
                         disabled={!isEnabled}
                         onClick={() => {
-                          
                           createTicket();
                           setOpen(false);
                           // handleUpload(11);

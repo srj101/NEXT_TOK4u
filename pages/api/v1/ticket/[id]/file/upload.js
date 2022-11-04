@@ -1,6 +1,5 @@
 const { prisma } = require("../../../../../../prisma/prisma");
 
-import { getSession } from "next-auth/react";
 import { IncomingForm } from "formidable";
 import fs from "fs";
 import open from "open";
@@ -16,20 +15,23 @@ export const config = {
 
 export default async function UploadFile(req, res) {
   //   const session = await getSession({ req });
-
-  const { id } = req.query;
-  console.log("from upload", id);
-  const uploadPath = `./storage/tickets/${id}`;
-  await createNecessaryDirectoriesSync(`${uploadPath}/x`);
-
+  console.log(req.body);
   try {
+    const { id } = req.query;
+    console.log("from upload", id);
+    const uploadPath = `./storage/tickets/${id}`;
+    await createNecessaryDirectoriesSync(`${uploadPath}/x`);
+    console.log(uploadPath);
     const form = await new IncomingForm({
       uploadDir: `./storage`,
       keepExtensions: true,
     });
 
-    form.parse(req, (err, fields, files) => {
-      // console.log(files.file);
+    await form.parse(req, (err, fields, files) => {
+      if (err) {
+        throw String(JSON.stringify(err, null, 2));
+      }
+      console.log(files.file);
       const f = files.file;
 
       const u = `${uploadPath}/${f.originalFilename}`;
@@ -38,7 +40,7 @@ export default async function UploadFile(req, res) {
         if (err) throw err;
         console.log("Successfully renamed - AKA moved!");
 
-        // console.log(files.file);
+        console.log(files.file);
 
         const filename = f.originalFilename;
         let title = fields.title;
@@ -63,11 +65,10 @@ email: rakibulislam.cse21@gmail.com
 
             const oAuth = await youtube.authenticate({
               type: "oauth",
-              client_id: data.clientid
-                ? data.clientid
-                : "451352924057-ca2m6d0ioeku2i153qndkkqmlf3mu58i.apps.googleusercontent.com",
+              client_id: data.clientid,
               client_secret: data.clientsecret,
-              redirect_url: `${process.env.BASE_URL}/api/v1/ticket/1/file/oauth2callback`,
+              redirect_url:
+                "http://localhost:3000/api/v1/ticket/1/file/oauth2callback",
             });
 
             open(
@@ -85,28 +86,22 @@ email: rakibulislam.cse21@gmail.com
           }
         }
 
-        try {
-          await prisma.ticketFile
-            .create({
-              data: {
-                filename: f.originalFilename,
-                ticketId: Number(id),
-                path: u,
-              },
-            })
-            .then((err) => console.log(err));
-          return res
-            .status(200)
-            .json({ message: "File Uploaded", success: true });
-        } catch (error) {
-          console.log(error);
-          return res.status(500).json({ message: error, success: false });
-        }
+        await prisma.ticketFile.create({
+          data: {
+            filename: f.originalFilename,
+            ticketId: Number(id),
+            path: u,
+          },
+        });
+
+        return res
+          .status(200)
+          .json({ message: "File Uploaded", success: true });
       });
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error });
+    res.status(500).json({ message: error, success: false });
   }
 }
-export { oAuth };
+// export { oAuth };

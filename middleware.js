@@ -15,7 +15,8 @@ export default async function middleware(req) {
         token?.user.isAdmin === false) ||
       (req.nextUrl.pathname === "/support_team_manager" &&
         !token?.user.roles.includes("Role4") &&
-        token?.user.isAdmin === false)
+        token?.user.isAdmin === false) ||
+      (req.nextUrl.pathname.includes("admin") && token?.user.isAdmin === false)
     ) {
       return NextResponse.redirect(`${origin}/`);
     }
@@ -23,3 +24,4 @@ export default async function middleware(req) {
 
   //   return NextResponse.redirect("/");
 }
+//notes , chat, email provider notification , admin page guard

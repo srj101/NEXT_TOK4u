@@ -1,20 +1,24 @@
 import { useQuery } from "react-query";
-/* import TicketDetail from "../../components/TicketDetail";
- */import { useRouter } from "next/router";
-import dynamic from 'next/dynamic'
+import { useRouter } from "next/router";
+import dynamic from "next/dynamic";
+import { useSession } from "next-auth/react";
 
-const TicketDetail = dynamic(() => import("../../components/TicketDetail"), { ssr: false })
+const TicketDetail = dynamic(() => import("../../components/TicketDetail"), {
+  ssr: false,
+});
+
 export default function Ticket() {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const fetchTicketById = async () => {
-    const id = router.query.id;
-    const res = await fetch(`/api/v1/ticket/${id}`);
+    const { id } = router.query;
+    const res = await fetch(`/api/v1/ticket/${id || 8}`);
     return res.json();
   };
 
   const { data, status } = useQuery("fetchTickets", fetchTicketById);
-
+  console.log(data);
   return (
     <div>
       {status === "loading" && (
@@ -33,7 +37,11 @@ export default function Ticket() {
 
       {status === "success" && (
         <div>
-          <TicketDetail ticket={data.tickets} />
+          <TicketDetail
+            ticket={data.tickets}
+            author={session.user.name}
+            user={session.user}
+          />
         </div>
       )}
     </div>

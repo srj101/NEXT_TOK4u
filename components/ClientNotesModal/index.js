@@ -1,9 +1,10 @@
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XIcon } from "@heroicons/react/outline";
 
-import rehypeSanitize from "rehype-sanitize";
-import MDEditor from "@uiw/react-md-editor";
+// import rehypeSanitize from "rehype-sanitize";
+// import MDEditor from "@uiw/react-md-editor";
+import { Editor } from "@tinymce/tinymce-react";
 
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
@@ -11,7 +12,8 @@ import "@uiw/react-markdown-preview/markdown.css";
 export default function ClientNotesModal({ notes, id }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(notes);
-  
+  const editorRef = useRef(null);
+
   async function postMarkdown() {
     await fetch(`/api/v1/clients/${id}/create-note`, {
       method: "POST",
@@ -23,14 +25,14 @@ export default function ClientNotesModal({ notes, id }) {
         id,
       }),
     })
-    .then((res) => res.json())
-    .then((res) => {
-      if(res.success === true) {
-        setOpen(false)
-      } else {
-        alert(res.error)
-      }
-    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success === true) {
+          setOpen(false);
+        } else {
+          alert(res.error);
+        }
+      });
   }
 
   return (
@@ -97,13 +99,51 @@ export default function ClientNotesModal({ notes, id }) {
                       Client Notes
                     </Dialog.Title>
                     <div className="mt-2">
-                      <MDEditor
-                        value={value}
-                        onChange={setValue}
-                        previewOptions={{
-                          rehypePlugins: [[rehypeSanitize]],
+                      <Editor
+                        apiKey={
+                          process.env.TINY_MCE_API_KEY ||
+                          "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                        }
+                        onInit={(evt, editor) => (editorRef.current = editor)}
+                        value={value || ""}
+                        onEditorChange={setValue}
+                        init={{
+                          theme_advanced_buttons3_add: "preview",
+                          plugin_preview_width: "500",
+                          plugin_preview_height: "600",
+                          height: 500,
+                          menubar: true,
+                          selector: "textarea",
+                          plugins: [
+                            "advlist",
+                            "autolink",
+                            "lists",
+                            "link",
+                            "image",
+                            "charmap",
+                            "preview",
+                            "anchor",
+                            "searchreplace",
+                            "visualblocks",
+                            "code",
+                            "fullscreen",
+                            "insertdatetime",
+                            "media",
+                            "table",
+                            "code",
+                            "help",
+                            "wordcount",
+                            "textpattern",
+                          ],
+                          toolbar:
+                            "undo redo | blocks | " +
+                            "bold italic forecolor | alignleft aligncenter " +
+                            "alignright alignjustify | bullist numlist outdent indent | " +
+                            "removeformat | help" +
+                            "preview",
+                          content_style:
+                            "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
                         }}
-                        height="80vh"
                       />
 
                       <div className="mt-4 float-right">

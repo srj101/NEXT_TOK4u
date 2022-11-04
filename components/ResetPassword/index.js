@@ -7,6 +7,8 @@ export default function ResetPassword({ user }) {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [check, setCheck] = useState("");
+  const [email, setEmail] = useState(user.email);
+  const [backdrop, setBackDrop] = useState(true);
 
   const success = () => {
     message.success("Password updated");
@@ -17,7 +19,6 @@ export default function ResetPassword({ user }) {
   };
 
   const postData = async () => {
-    const id = user.id;
     if (check === password) {
       await fetch(`/api/v1/admin/user/resetpassword`, {
         method: "POST",
@@ -26,7 +27,7 @@ export default function ResetPassword({ user }) {
         },
         body: JSON.stringify({
           password,
-          id,
+          email,
         }),
       })
         .then((res) => res.json())
@@ -60,8 +61,12 @@ export default function ResetPassword({ user }) {
         <Dialog
           as="div"
           className="fixed z-10 inset-0 overflow-y-auto"
-          onClose={setOpen}
+          onClose={() => setBackDrop(!backdrop)}
+          backdrop={backdrop}
         >
+          {/* The backdrop, rendered as a fixed sibling to the panel container */}
+          <div className="fixed inset-0 bg-black/30" aria-hidden={backdrop} />
+
           <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <Transition.Child
               as={Fragment}
@@ -111,6 +116,13 @@ export default function ResetPassword({ user }) {
                       Reset Password
                     </Dialog.Title>
                     <div className="mt-2 space-y-4">
+                      <input
+                        type="email"
+                        className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                        onChange={(e) => setEmail(e.target.value)}
+                        value={email}
+                      />
+
                       <input
                         type="password"
                         className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"

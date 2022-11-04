@@ -4,18 +4,27 @@ import { getSession } from "next-auth/react";
 import bcrypt from "bcrypt";
 
 export default async function getAllClients(req, res) {
-  const { password, id } = req.body;
+  const { password, id, email } = req.body;
   const session = await getSession({ req });
 
   try {
     if (session.user.isAdmin) {
       const hashedPass = await bcrypt.hash(password, 10);
-      await prisma.user.update({
-        where: { id: Number(id) },
-        data: {
-          password: hashedPass,
-        },
-      });
+      if (email) {
+        await prisma.user.update({
+          where: { email: email },
+          data: {
+            password: hashedPass,
+          },
+        });
+      } else if (id) {
+        await prisma.user.update({
+          where: { id: Number(id) },
+          data: {
+            password: hashedPass,
+          },
+        });
+      }
       res
         .status(201)
         .json({ message: "password updated success", failed: false });

@@ -1,7 +1,9 @@
 const { prisma } = require("../../../../prisma/prisma");
+
 import { Novu } from "@novu/node";
 
 const novu = new Novu(process.env.NOVU_TOKEN);
+
 export default async function create(req, res) {
   const { name, company, detail, title, priority, email, engineer, issue } =
     JSON.parse(req.body);
@@ -64,7 +66,7 @@ export default async function create(req, res) {
       },
     });
 
-    res.status(200).json({ message: "Ticket created correctly" });
+    res.status(200).json(data);
   } catch (error) {
     console.log(error);
     res.status(500).json({ error });
