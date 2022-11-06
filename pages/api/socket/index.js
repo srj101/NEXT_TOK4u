@@ -31,14 +31,24 @@ const SocketHandler = (req, res) => {
       });
 
       //send and get message
-      socket.on("sendMessage", ({ roomId, message }) => {
-        console.log("msg recieved", { roomId, message });
-        socket.join(roomId);
-        io.to(roomId).emit("getMessage", {
-          roomId,
-          message,
-        });
-      });
+      socket.on(
+        "sendMessage",
+        ({ roomId, message, personEmail, userEmail }) => {
+          console.log("msg recieved", {
+            roomId,
+            message,
+            personEmail,
+            userEmail,
+          });
+          socket.join(roomId);
+          io.emit("getMessage", {
+            roomId,
+            message,
+            personEmail,
+            userEmail,
+          });
+        }
+      );
 
       //when disconnect
       socket.on("disconnect", () => {

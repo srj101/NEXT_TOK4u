@@ -29,6 +29,8 @@ const MessageInputBOX = ({ onSend, messages, user, person }) => {
     socket.emit("sendMessage", {
       roomId: room,
       message: { msg, file },
+      personEmail: person.email,
+      userEmail: user.email,
     });
     onSend([...messages, message]);
     setMsg("");

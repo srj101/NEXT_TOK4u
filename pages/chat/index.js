@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect, useRef } from "react";
 import { useEffect, useState } from "react";
 import io from "socket.io-client";
 import { useSession } from "next-auth/react";
@@ -20,6 +20,7 @@ const Chat = ({ users, msgs }) => {
   const { data: session } = useSession();
 
   const [messages, setMessages] = useState(msgs);
+  const lastMessageRef = useRef(null);
 
   useEffect(() => socketInitializer(), [selectedPerson]);
 
@@ -35,30 +36,18 @@ const Chat = ({ users, msgs }) => {
     socket.on("getUsers", (users) => {
       console.log("online-->", users);
     });
+    socket.on(
+      "getMessage",
+      async ({ roomId, personEmail, userEmail, messages }) => {
+        await fetchConversetion(personEmail, userEmail);
+      }
+    );
   };
 
   const [selectedPerson, setSelectedPerson] = useState(users[0]);
 
   async function fetchConversetion(personEmail, userEmail) {
     // console.log(personEmail, userEmail);
-    await fetch("/api/socket");
-    socket = io();
-
-    socket.on("connection", (socket) => {
-      const room = session.user.email
-        .concat(selectedPerson.email)
-        .split("")
-        .sort()
-        .join("");
-
-      socket.join(room);
-
-      socket.on("getMessage", (msges) => {
-        console.log("msges-->", msges);
-      });
-
-      console.log("joined room");
-    });
 
     const data = await fetch(`/api/v1/chat/${personEmail}`, {
       method: "POST",
@@ -71,6 +60,7 @@ const Chat = ({ users, msgs }) => {
     });
     const { messages } = await data.json();
     setMessages(messages);
+    lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
     return messages;
   }
 
@@ -98,6 +88,7 @@ const Chat = ({ users, msgs }) => {
                 owner={session.user}
                 person={selectedPerson}
                 messages={messages}
+                lastMessageRef={lastMessageRef}
               />
             </div>
             <div className=" w-full h-16 px-8">

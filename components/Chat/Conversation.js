@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-const Conversation = ({ messages, user }) => {
+const Conversation = ({ messages, user, lastMessageRef }) => {
   return (
     <div className="flex flex-col px-4">
       {!messages
@@ -8,6 +8,7 @@ const Conversation = ({ messages, user }) => {
         : messages.length > 0
         ? messages.map((m, idx) => (
             <div
+              ref={lastMessageRef}
               className={
                 m.sender == user.id
                   ? "self-end flex bg-blue-500 py-3 px-2 h-auto w-9/12 mb-2 rounded-md"
