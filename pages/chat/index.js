@@ -84,6 +84,10 @@ const Chat = ({ users, msgs }) => {
     // console.log(messages);
   }, [messages.length]);
 
+  if (users.length === 0) {
+    return <div>No One to Chat... Add some users first</div>;
+  }
+
   return (
     <div className="flex h-full">
       <div className="basis-8/12">
@@ -123,7 +127,7 @@ export async function getServerSideProps({ req, res }) {
   const data = await fetch(`${process.env.BASE_URL}/api/v1/users/all`);
   let { users } = await data.json();
 
-  if (!token) {
+  if (!token || users.length === 1) {
     return {
       props: { users: [], msgs: [] },
     };
