@@ -20,14 +20,14 @@ export default async function UploadFile(req, res) {
     const { id } = req.query;
     console.log("from upload", id);
     const uploadPath = `./storage/tickets/${id}`;
-    await createNecessaryDirectoriesSync(`${uploadPath}/x`);
+    createNecessaryDirectoriesSync(`${uploadPath}/x`);
     console.log(uploadPath);
-    const form = await new IncomingForm({
+    const form = new IncomingForm({
       uploadDir: `./storage`,
       keepExtensions: true,
     });
 
-    await form.parse(req, (err, fields, files) => {
+    form.parse(req, (err, fields, files) => {
       if (err) {
         throw String(JSON.stringify(err, null, 2));
       }

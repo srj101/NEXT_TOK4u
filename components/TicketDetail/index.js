@@ -161,7 +161,9 @@ export default function TicketDetail(props) {
                       </h1>
                       <p
                         className={edit ? "hidden" : "font-bold mt-2 text-sm"}
-                        dangerouslySetInnerHTML={{ __html: note }}
+                        dangerouslySetInnerHTML={{
+                          __html: props.ticket.client.notes,
+                        }}
                       ></p>
                     </div>
                   </div>

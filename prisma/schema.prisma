@@ -162,3 +162,23 @@ enum Hook {
   ticket_created
   ticket_status_changed
 }
+
+
+
+model Room {
+  lastMessage String?
+  users String[]
+  id  Int      @id @default(autoincrement())
+  room String
+}
+
+model Message {
+  id Int @id @default(autoincrement())
+  roomId String
+  message String
+  fileName String?
+  path String?
+  sender Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}

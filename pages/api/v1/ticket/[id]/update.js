@@ -2,12 +2,16 @@ const { prisma } = require("../../../../../prisma/prisma");
 
 import { Novu } from "@novu/node";
 
+import h2p from "html2plaintext";
+
 const novu = new Novu(process.env.NOVU_TOKEN);
 
 export default async function updateTicket(req, res) {
   const { id } = req.query;
 
-  const { note, detail, lastUpdateBy } = req.body;
+  let { note, detail, lastUpdateBy } = req.body;
+  detail = h2p(detail);
+  note = h2p(note);
 
   try {
     const data = await prisma.ticket.update({
