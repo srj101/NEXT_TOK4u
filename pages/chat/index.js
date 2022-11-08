@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import React, { useLayoutEffect, useRef } from "react";
+import React, { useRef } from "react";
 import { useEffect, useState } from "react";
 import io from "socket.io-client";
 import { useSession } from "next-auth/react";
@@ -60,7 +60,8 @@ const Chat = ({ users, msgs }) => {
     });
     const { messages } = await data.json();
     setMessages(messages);
-    lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
+    lastMessageRef.current &&
+      lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
     return messages;
   }
 

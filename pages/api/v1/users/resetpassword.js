@@ -1,14 +1,16 @@
 const { prisma } = require("../../../../prisma/prisma");
 
 import bcrypt from "bcrypt";
+const JWT = require("jsonwebtoken");
 
 export default async function getAllClients(req, res) {
-  const { password, id } = req.body;
+  const { password, token } = req.body;
 
   try {
+    const { user } = JWT.verify(token, process.env.JWT_SECRET);
     const hashedPass = await bcrypt.hash(password, 10);
     await prisma.user.update({
-      where: { id: Number(id) },
+      where: { id: Number(user.id) },
       data: {
         password: hashedPass,
       },

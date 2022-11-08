@@ -152,19 +152,27 @@ export default function TicketDetail(props) {
                       </p>
                     </div>
                     <div className="text-right">
-                      <h1
-                        className={
-                          edit ? "hidden" : "text-2xl font-bold text-gray-900"
-                        }
-                      >
-                        Note
-                      </h1>
-                      <p
-                        className={edit ? "hidden" : "font-bold mt-2 text-sm"}
-                        dangerouslySetInnerHTML={{
-                          __html: props.ticket.client.notes,
-                        }}
-                      ></p>
+                      {props.ticket.client.notes && (
+                        <React.Fragment>
+                          <h1
+                            className={
+                              edit
+                                ? "hidden"
+                                : "text-2xl font-bold text-gray-900"
+                            }
+                          >
+                            Note
+                          </h1>
+                          <p
+                            className={
+                              edit ? "hidden" : "font-bold mt-2 text-sm"
+                            }
+                            dangerouslySetInnerHTML={{
+                              __html: props.ticket.client.notes,
+                            }}
+                          ></p>
+                        </React.Fragment>
+                      )}
                     </div>
                   </div>
 

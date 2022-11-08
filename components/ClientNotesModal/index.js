@@ -8,11 +8,13 @@ import { Editor } from "@tinymce/tinymce-react";
 
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
+import { useRouter } from "next/router";
 
 export default function ClientNotesModal({ notes, id }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(notes);
   const editorRef = useRef(null);
+  const history = useRouter();
 
   async function postMarkdown() {
     await fetch(`/api/v1/clients/${id}/create-note`, {
@@ -26,9 +28,10 @@ export default function ClientNotesModal({ notes, id }) {
       }),
     })
       .then((res) => res.json())
-      .then((res) => {
+      .then(async (res) => {
         if (res.success === true) {
           setOpen(false);
+          await history.push(`/ticket/${id}`);
         } else {
           alert(res.error);
         }

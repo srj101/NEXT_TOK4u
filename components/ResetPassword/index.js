@@ -2,16 +2,23 @@ import React, { useState, Fragment } from "react";
 import { message } from "antd";
 import { Dialog, Transition } from "@headlessui/react";
 import { XIcon } from "@heroicons/react/outline";
+import { useRouter } from "next/router";
 
-export default function ResetPassword({ user }) {
+export default function ResetPassword({ user, token, mail }) {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [check, setCheck] = useState("");
-  const [email, setEmail] = useState(user.email);
+  const [email, setEmail] = useState(user?.email || mail);
   const [backdrop, setBackDrop] = useState(true);
+  const router = useRouter();
 
   const success = () => {
     message.success("Password updated");
+    if (user && user.isAdmin) {
+      return;
+    } else {
+      router.push("/auth/login");
+    }
   };
 
   const fail = (f) => {
@@ -20,24 +27,45 @@ export default function ResetPassword({ user }) {
 
   const postData = async () => {
     if (check === password) {
-      await fetch(`/api/v1/admin/user/resetpassword`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          password,
-          email,
-        }),
-      })
-        .then((res) => res.json())
-        .then((res) => {
-          if (res.failed === false) {
-            success();
-          } else {
-            fail(res.message);
-          }
-        });
+      if (user && user.isAdmin == true) {
+        await fetch(`/api/v1/admin/user/resetpassword`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            password,
+            email,
+          }),
+        })
+          .then((res) => res.json())
+          .then((res) => {
+            if (res.failed === false) {
+              success();
+            } else {
+              fail(res.message);
+            }
+          });
+      } else {
+        await fetch(`/api/v1/users/resetpassword`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            password,
+            token,
+          }),
+        })
+          .then((res) => res.json())
+          .then((res) => {
+            if (res.failed === false) {
+              success();
+            } else {
+              fail(res.message);
+            }
+          });
+      }
     } else {
       fail("Passwords are not the same");
     }
