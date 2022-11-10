@@ -63,7 +63,7 @@ export default function TicketFiles({ id, uploaded, setUploaded }) {
     <div>
       <h3 className="text-xl">Ticket Files</h3>
       <div className="flow-root py-4 mx-auto -mt-5">
-        {files.length >= 1 ? (
+        {files?.length >= 1 ? (
           files.map((file) => {
             return (
               <div className="w-full" key={file.id}>

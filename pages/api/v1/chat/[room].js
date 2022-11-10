@@ -1,4 +1,5 @@
-const { prisma } = require("../../../../prisma/prisma");
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 
 export default async function getRoom(req, res) {
   let { userEmail } = req.body;
@@ -47,7 +48,7 @@ export default async function getRoom(req, res) {
         ],
       },
     });
-    // console.log(messages);
+    console.log(messages);
     if (messages) {
       res.json({ messages, failed: false });
     } else {

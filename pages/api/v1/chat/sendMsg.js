@@ -1,4 +1,4 @@
-const { prisma } = require("../../../../prisma/prisma");
+import { PrismaClient } from "@prisma/client";
 import { IncomingForm } from "formidable";
 import fs from "fs";
 import { createNecessaryDirectoriesSync } from "filesac";
@@ -8,6 +8,7 @@ export const config = {
     bodyParser: false,
   },
 };
+const prisma = new PrismaClient();
 
 export default async function snedMsg(req, res) {
   const form = new IncomingForm({

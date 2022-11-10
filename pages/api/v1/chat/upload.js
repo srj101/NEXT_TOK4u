@@ -1,14 +1,13 @@
-const { prisma } = require("../../../../../prisma/prisma");
-
 import { IncomingForm } from "formidable";
 import fs from "fs";
 import { createNecessaryDirectoriesSync } from "filesac";
-
+import { PrismaClient } from "@prisma/client";
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+const prisma = new PrismaClient();
 
 export default async function UploadFile(req, res) {
   const uploadPath = `./storage/${req.body.room}`;

@@ -16,10 +16,10 @@ const ChatContainer = dynamic(
   }
 );
 let socket;
-const Chat = ({ users, msgs }) => {
+const Chat = ({ users, msgs, error }) => {
   const { data: session } = useSession();
 
-  const [messages, setMessages] = useState(msgs);
+  const [messages, setMessages] = useState(msgs || []);
   const lastMessageRef = useRef(null);
 
   useEffect(() => socketInitializer(), [selectedPerson]);
@@ -44,7 +44,7 @@ const Chat = ({ users, msgs }) => {
     );
   };
 
-  const [selectedPerson, setSelectedPerson] = useState(users[0]);
+  const [selectedPerson, setSelectedPerson] = useState(users ? users[0] : {});
 
   async function fetchConversetion(personEmail, userEmail) {
     // console.log(personEmail, userEmail);
@@ -67,13 +67,16 @@ const Chat = ({ users, msgs }) => {
 
   useEffect(() => {
     // console.log(selectedPerson);
+    if (!selectedPerson) return;
     fetchConversetion(selectedPerson.email, session.user.email);
   }, [selectedPerson]);
 
   useEffect(() => {
-    setMessages(messages);
     // console.log(messages);
-  }, [messages.length]);
+    setMessages(messages);
+  }, [messages?.length]);
+
+  if (error) return <div>failed to load</div>;
 
   if (users.length === 0) {
     return <div>No One to Chat... Add some users first</div>;
@@ -115,34 +118,44 @@ const Chat = ({ users, msgs }) => {
 export default Chat;
 
 export async function getServerSideProps({ req, res }) {
-  const token = await getToken({ req, secret: process.env.JWT_SECRET });
-  const data = await fetch(`${process.env.BASE_URL}/api/v1/users/all`);
-  let { users } = await data.json();
+  try {
+    const token = await getToken({ req, secret: process.env.JWT_SECRET });
+    const data = await fetch(`${process.env.BASE_URL}/api/v1/users/all`);
+    let { users } = await data.json();
 
-  if (!token || users.length === 1) {
+    if (!token || users.length === 1) {
+      return {
+        props: { users: [], msgs: [] },
+      };
+    }
+
+    users = users.filter((item) => item.email !== token.email);
+
+    const d = await fetch(
+      `${process.env.BASE_URL}/api/v1/chat/${users[0].email}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          userEmail: token.email,
+        }),
+        headers: {
+          "content-type": "application/json",
+        },
+      }
+    );
+    console.log(users);
+
+    console.log(d);
+
+    const { messages } = await d.json();
+
     return {
-      props: { users: [], msgs: [] },
+      props: { users: users, msgs: JSON.parse(JSON.stringify(messages)) },
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      props: { error: JSON.parse(JSON.stringify(error)) },
     };
   }
-
-  users = users.filter((item) => item.email !== token.email);
-
-  const d = await fetch(
-    `${process.env.BASE_URL}/api/v1/chat/${users[0].email}`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        userEmail: token.email,
-      }),
-      headers: {
-        "content-type": "application/json",
-      },
-    }
-  );
-
-  const { messages } = await d.json();
-
-  return {
-    props: { users: users, msgs: messages },
-  };
 }
