@@ -3,9 +3,7 @@ import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 
-const TicketDetail = dynamic(() => import("../../components/TicketDetail"), {
-  ssr: false,
-});
+import TicketDetail from "../../components/TicketDetail";
 
 export default function Ticket() {
   const router = useRouter();
@@ -13,7 +11,7 @@ export default function Ticket() {
 
   const fetchTicketById = async () => {
     const { id } = router.query;
-    const res = await fetch(`/api/v1/ticket/${id || 8}`);
+    const res = await fetch(`/api/v1/ticket/${id || 1}`);
     return res.json();
   };
 

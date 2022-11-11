@@ -11,7 +11,7 @@ export default async function updateTicket(req, res) {
 
   let { note, detail, lastUpdateBy } = req.body;
   detail = h2p(detail);
-  note = h2p(note);
+  note[note.length - 1] = h2p(note[note.length - 1]);
 
   try {
     const data = await prisma.ticket.update({
@@ -23,6 +23,12 @@ export default async function updateTicket(req, res) {
       },
     });
 
+    const y = data.note.map((note) => {
+      return {
+        answer: h2p(note),
+      };
+    });
+
     await novu.trigger("answering-tickets-by-team", {
       to: {
         subscriberId: data.email,
@@ -30,7 +36,7 @@ export default async function updateTicket(req, res) {
       },
       payload: {
         name: data.name,
-        answer: data.note,
+        answers: y,
         title: data.title,
         detail: data.detail,
         answeredBy: data.lastUpdateBy,

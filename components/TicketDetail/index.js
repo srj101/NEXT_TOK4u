@@ -21,7 +21,8 @@ export default function TicketDetail(props) {
   const [ticket, setTicket] = useState(props.ticket);
   const [edit, setEdit] = useState(false);
 
-  const [note, setNote] = useState(props.ticket.note);
+  const [note, setNote] = useState("");
+  const [notes, setNotes] = useState(props.ticket.note);
   const [issue, setIssue] = useState(props.ticket.detail);
   const [title, setTitle] = useState(props.ticket.title);
   const [name, setName] = useState(props.ticket.name);
@@ -50,6 +51,7 @@ export default function TicketDetail(props) {
   }, []);
 
   async function update() {
+    console.log(notes);
     await fetch(`/api/v1/ticket/${id}/update`, {
       method: "PUT",
       headers: {
@@ -57,13 +59,17 @@ export default function TicketDetail(props) {
       },
       body: JSON.stringify({
         detail: issue,
-        note,
+        note: [...notes, note],
         title,
         lastUpdateBy: props.author,
       }),
-    }).then((res) => res.json());
+    }).then((res) => {
+      history.push(`/ticket`);
+      return res.json();
+    });
   }
 
+  console.log(notes);
   async function updateStatus() {
     await fetch(`/api/v1/ticket/${id}/update-status`, {
       method: "POST",
@@ -86,12 +92,11 @@ export default function TicketDetail(props) {
     name: "file",
     showUploadList: false,
     action: `/api/v1/ticket/${id}/file/upload`,
-    data: (file) => {
+    data: () => {
       let data = new FormData();
       data.append("file", file);
       data.append("filename", file.name);
       data.append("ticket", ticket.id);
-      return data;
     },
     onChange(info) {
       if (info.file.status !== "uploading") {
@@ -466,7 +471,169 @@ export default function TicketDetail(props) {
                   <div className="flow-root -mt-4"></div>
                 </div>
                 <div className={edit ? "hidden" : "mt-3"}>
-                  {note ? (
+                  {notes && notes.length > 0 ? (
+                    notes.map((note, i) => (
+                      <Editor
+                        key={i}
+                        apiKey={
+                          process.env.TINY_MCE_API_KEY ||
+                          "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                        }
+                        onInit={(evt, editor) => (editorRef.current = editor)}
+                        initialValue={note}
+                        disabled={isAdmin == true ? false : true}
+                        onEditorChange={(e) => {
+                          const d = notes;
+                          d[i] = e;
+                          console.log(d);
+                          setNotes(d);
+                        }}
+                        init={{
+                          height: 500,
+                          menubar: true,
+                          selector: "textarea",
+                          plugins: [
+                            "advlist",
+                            "autolink",
+                            "lists",
+                            "link",
+                            "image",
+                            "charmap",
+                            "preview",
+                            "anchor",
+                            "searchreplace",
+                            "visualblocks",
+                            "code",
+                            "fullscreen",
+                            "insertdatetime",
+                            "media",
+                            "table",
+                            "code",
+                            "help",
+                            "wordcount",
+                            "textpattern",
+                          ],
+                          toolbar:
+                            "undo redo | blocks | " +
+                            "bold italic forecolor | alignleft aligncenter " +
+                            "alignright alignjustify | bullist numlist outdent indent | " +
+                            "removeformat | help" +
+                            "preview",
+                          content_style:
+                            "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <span>No work has been entered yet</span>
+                  )}
+
+                  <div className="mb-8"></div>
+                  <Editor
+                    apiKey={
+                      process.env.TINY_MCE_API_KEY ||
+                      "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                    }
+                    onInit={(evt, editor) => (editorRef.current = editor)}
+                    value={note}
+                    onEditorChange={setNote}
+                    init={{
+                      height: 500,
+                      menubar: true,
+                      selector: "textarea",
+                      plugins: [
+                        "advlist",
+                        "autolink",
+                        "lists",
+                        "link",
+                        "image",
+                        "charmap",
+                        "preview",
+                        "anchor",
+                        "searchreplace",
+                        "visualblocks",
+                        "code",
+                        "fullscreen",
+                        "insertdatetime",
+                        "media",
+                        "table",
+                        "code",
+                        "help",
+                        "wordcount",
+                        "textpattern",
+                      ],
+                      toolbar:
+                        "undo redo | blocks | " +
+                        "bold italic forecolor | alignleft aligncenter " +
+                        "alignright alignjustify | bullist numlist outdent indent | " +
+                        "removeformat | help" +
+                        "preview",
+                      content_style:
+                        "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+                    }}
+                  />
+                </div>
+                <div className={edit ? "mt-3" : "hidden"}>
+                  <div className="hidden sm:block">
+                    {notes && notes.length > 0 ? (
+                      notes.map((note, i) => (
+                        <Editor
+                          key={i}
+                          apiKey={
+                            process.env.TINY_MCE_API_KEY ||
+                            "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                          }
+                          onInit={(evt, editor) => (editorRef.current = editor)}
+                          initialValue={note}
+                          // value={notes[Number(i)]}
+                          disabled={isAdmin == true ? false : true}
+                          onEditorChange={(e) => {
+                            let l = e;
+                            let d = notes;
+                            d[i] = l;
+                            setNotes(d);
+                          }}
+                          init={{
+                            height: 500,
+                            menubar: true,
+                            selector: "textarea",
+                            plugins: [
+                              "advlist",
+                              "autolink",
+                              "lists",
+                              "link",
+                              "image",
+                              "charmap",
+                              "preview",
+                              "anchor",
+                              "searchreplace",
+                              "visualblocks",
+                              "code",
+                              "fullscreen",
+                              "insertdatetime",
+                              "media",
+                              "table",
+                              "code",
+                              "help",
+                              "wordcount",
+                              "textpattern",
+                            ],
+                            toolbar:
+                              "undo redo | blocks | " +
+                              "bold italic forecolor | alignleft aligncenter " +
+                              "alignright alignjustify | bullist numlist outdent indent | " +
+                              "removeformat | help" +
+                              "preview",
+                            content_style:
+                              "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+                          }}
+                        />
+                      ))
+                    ) : (
+                      <span>No work has been entered yet</span>
+                    )}
+
+                    <div className="mb-6"></div>
                     <Editor
                       apiKey={
                         process.env.TINY_MCE_API_KEY ||
@@ -474,66 +641,8 @@ export default function TicketDetail(props) {
                       }
                       onInit={(evt, editor) => (editorRef.current = editor)}
                       value={note}
-                      disabled={
-                        isAdmin == true ? false : lastUpdateBy ? true : false
-                      }
                       onEditorChange={setNote}
                       init={{
-                        height: 500,
-                        menubar: true,
-                        selector: "textarea",
-                        plugins: [
-                          "advlist",
-                          "autolink",
-                          "lists",
-                          "link",
-                          "image",
-                          "charmap",
-                          "preview",
-                          "anchor",
-                          "searchreplace",
-                          "visualblocks",
-                          "code",
-                          "fullscreen",
-                          "insertdatetime",
-                          "media",
-                          "table",
-                          "code",
-                          "help",
-                          "wordcount",
-                          "textpattern",
-                        ],
-                        toolbar:
-                          "undo redo | blocks | " +
-                          "bold italic forecolor | alignleft aligncenter " +
-                          "alignright alignjustify | bullist numlist outdent indent | " +
-                          "removeformat | help" +
-                          "preview",
-                        content_style:
-                          "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
-                      }}
-                    />
-                  ) : (
-                    <span>No work has been entered yet</span>
-                  )}
-                </div>
-                <div className={edit ? "mt-3" : "hidden"}>
-                  <div className="hidden sm:block">
-                    <Editor
-                      apiKey={
-                        process.env.TINY_MCE_API_KEY ||
-                        "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
-                      }
-                      onInit={(evt, editor) => (editorRef.current = editor)}
-                      value={note || ""}
-                      disabled={
-                        isAdmin == true ? false : lastUpdateBy ? true : false
-                      }
-                      onEditorChange={setNote}
-                      init={{
-                        theme_advanced_buttons3_add: "preview",
-                        plugin_preview_width: "500",
-                        plugin_preview_height: "600",
                         height: 500,
                         menubar: true,
                         selector: "textarea",
@@ -570,21 +679,74 @@ export default function TicketDetail(props) {
                     />
                   </div>
                   <div className="sm:hidden">
+                    {notes && notes.length > 0 ? (
+                      notes.map((note, i) => (
+                        <Editor
+                          key={i}
+                          apiKey={
+                            process.env.TINY_MCE_API_KEY ||
+                            "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
+                          }
+                          onInit={(evt, editor) => (editorRef.current = editor)}
+                          initialValue={note}
+                          disabled={isAdmin == true ? false : true}
+                          onEditorChange={(e) => {
+                            let l = e;
+                            let d = notes;
+                            d[i] = l;
+                            setNotes(d);
+                          }}
+                          init={{
+                            height: 500,
+                            menubar: true,
+                            selector: "textarea",
+                            plugins: [
+                              "advlist",
+                              "autolink",
+                              "lists",
+                              "link",
+                              "image",
+                              "charmap",
+                              "preview",
+                              "anchor",
+                              "searchreplace",
+                              "visualblocks",
+                              "code",
+                              "fullscreen",
+                              "insertdatetime",
+                              "media",
+                              "table",
+                              "code",
+                              "help",
+                              "wordcount",
+                              "textpattern",
+                            ],
+                            toolbar:
+                              "undo redo | blocks | " +
+                              "bold italic forecolor | alignleft aligncenter " +
+                              "alignright alignjustify | bullist numlist outdent indent | " +
+                              "removeformat | help" +
+                              "preview",
+                            content_style:
+                              "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
+                          }}
+                        />
+                      ))
+                    ) : (
+                      <span>No work has been entered yet</span>
+                    )}
+
+                    <div className="mb-8"></div>
+
                     <Editor
                       apiKey={
                         process.env.TINY_MCE_API_KEY ||
                         "4affuybkwsnfzhv7ra9rmi2z380go3jzjjz92ooutbfzkmj1"
                       }
                       onInit={(evt, editor) => (editorRef.current = editor)}
-                      value={note || ""}
-                      disabled={
-                        isAdmin == true ? false : lastUpdateBy ? true : false
-                      }
+                      value={note}
                       onEditorChange={setNote}
                       init={{
-                        theme_advanced_buttons3_add: "preview",
-                        plugin_preview_width: "500",
-                        plugin_preview_height: "600",
                         height: 500,
                         menubar: true,
                         selector: "textarea",

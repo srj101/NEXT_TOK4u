@@ -74,7 +74,7 @@ model Ticket {
   title      String
   detail     String?
   email      String
-  note       String?
+  note       String[]
   isComplete Boolean
   priority   String
   assignedTo User?        @relation(fields: [userId], references: [id])
@@ -82,9 +82,10 @@ model Ticket {
   clientId   Int
   userId     Int
   TicketFile TicketFile[]
-
   lastUpdateBy  String?
 }
+
+
 
 model Client {
   id          Int      @id @default(autoincrement())

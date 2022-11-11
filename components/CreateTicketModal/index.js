@@ -21,6 +21,7 @@ import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 
 import UploadMultiFiles from "../../components/UploadMultiFiles";
+import { useRouter } from "next/router";
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
 function classNames(...classes) {
@@ -28,6 +29,7 @@ function classNames(...classes) {
 }
 
 export default function CreateTicketModal() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [company, setCompany] = useState();
@@ -144,6 +146,7 @@ export default function CreateTicketModal() {
       .then((data) => {
         console.log(data);
         handleUpload(data.id);
+        router.push("/ticket");
         // const formData = new FormData();
         // // console.log(fileList[0]);
         // // fileList.forEach((file) => {

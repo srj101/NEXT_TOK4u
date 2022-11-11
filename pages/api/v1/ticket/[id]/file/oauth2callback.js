@@ -44,7 +44,7 @@ export default async function oauth2callback(req, res) {
       redirect_url: "http://localhost:3000/api/v1/ticket/1/file/oauth2callback",
     });
 
-    await oAuth.getToken(req.query.code, async (err, tokens) => {
+    await oAuth.getToken(req.query.code, (err, tokens) => {
       if (err) {
         console.log(err);
         return;
@@ -52,7 +52,7 @@ export default async function oauth2callback(req, res) {
 
       oAuth.setCredentials(tokens);
 
-      await youtube.videos.insert(
+      youtube.videos.insert(
         {
           resource: {
             snippet: { title, description },
@@ -61,14 +61,14 @@ export default async function oauth2callback(req, res) {
           part: "snippet,status",
           media: {
             body: fs.createReadStream(
-              `./storage/tickets/${ticketid}/${filename}`
+              `./public/storage/tickets/${ticketid}/${filename}`
             ),
           },
         },
         async (err, data) => {
           let videoUrl = `https://www.youtube.com/watch?v=${data.data.id}`;
-          const result = await prisma.ticketFile.updateMany({
-            where: { path: `./storage/tickets/${ticketid}/${filename}` },
+          await prisma.ticketFile.updateMany({
+            where: { path: `./public/storage/tickets/${ticketid}/${filename}` },
             data: {
               youtubeUrl: videoUrl,
               thumbnail: data.data.snippet.thumbnails.high.url,
