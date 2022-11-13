@@ -2,6 +2,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev ",
+    "prebuild": "chmod +x ./fix_crypto_dependency.sh; ./fix_crypto_dependency.sh",
     "build": "next build",
     "start": "next start",
     "seed": "prisma db seed",
