@@ -22,8 +22,8 @@
     "pages/index.js",
     "pages/_app.js"
   ],
-  "exclude": ["node_modules"],
   "paths": {
     "crypto": ["node_modules/crypto-js"]
   }
+  // "exclude": ["node_modules"]
 }
