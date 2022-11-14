@@ -74,5 +74,8 @@
   "prisma": {
     "seed": "node prisma/seed.js",
     "schema": "./prisma/schema.prisma"
+  },
+  "browser": {
+    "crypto": false
   }
 }
